@@ -1,65 +1,209 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Search } from "lucide-react";
+import { HeroBanner } from "@/components/HeroBanner";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { SectionLabel } from "@/components/SectionLabel";
+import { ProductCard } from "@/components/ProductCard";
+import { CategoryCard } from "@/components/CategoryCard";
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import {
+  heroBanners,
+  popularProducts,
+  categories,
+  bestSellingProducts,
+  exploreProducts,
+  promoBanners,
+} from "@/lib/mockData";
 
 export default function Home() {
+  // Set countdown target to 3 days from now
+  const countdownTarget = new Date();
+  countdownTarget.setDate(countdownTarget.getDate() + 3);
+  countdownTarget.setHours(23, 19, 56, 0);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="bg-white min-h-screen w-full">
+      {/* Header */}
+      <Header />
+
+      {/* Hero Banner Carousel */}
+      <section className="max-w-7xl mx-auto px-6 py-6">
+        <HeroBanner banners={heroBanners} />
+      </section>
+
+      {/* Popular Right Now Section */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <SectionLabel label="Today's" className="mb-2" />
+            <h2 className="font-fredoka text-2xl lg:text-3xl font-bold text-foreground">
+              Popular Right Now
+            </h2>
+          </div>
+          <CountdownTimer targetDate={countdownTarget} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Products Horizontal Scroll */}
+        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          {popularProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              className="min-w-[200px] max-w-[200px]"
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Browse By Category Section */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <SectionLabel label="Categories" className="mb-2" />
+            <h2 className="font-fredoka text-2xl lg:text-3xl font-bold text-foreground">
+              Browse By Category
+            </h2>
+          </div>
+          <Button variant="default" asChild>
+            <Link href="/products">View All Products</Link>
+          </Button>
+        </div>
+
+        {/* Categories Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {categories.map((category) => (
+            <CategoryCard key={category.id} category={category} />
+          ))}
+        </div>
+      </section>
+
+      {/* Best Selling Products Section */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <SectionLabel label="This Month" className="mb-2" />
+        <h2 className="font-fredoka text-2xl lg:text-3xl font-bold text-foreground mb-6">
+          Best Selling Products
+        </h2>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          {bestSellingProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
+      {/* Explore Our Products Section */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <SectionLabel label="Our Products" className="mb-2" />
+        <h2 className="font-fredoka text-2xl lg:text-3xl font-bold text-foreground mb-6">
+          Explore Our Products
+        </h2>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+          {exploreProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+
+        <div className="flex justify-center">
+          <Button variant="default" asChild>
+            <Link href="/products">View All Products</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* New Arrival / Promotional Banners Section */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <SectionLabel label="Featured" className="mb-2" />
+        <h2 className="font-fredoka text-2xl lg:text-3xl font-bold text-foreground mb-6">
+          New Arrival
+        </h2>
+
+        {/* Promo Banners Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {promoBanners.map((banner) => (
+            <Link
+              key={banner.id}
+              href={banner.href}
+              className="relative aspect-[4/3] rounded-xl overflow-hidden group"
+            >
+              <Image
+                src={banner.image}
+                alt={banner.alt}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              {/* Overlay with gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="font-fredoka text-white text-lg font-semibold drop-shadow-md">
+                  {banner.alt}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Additional Promo Banners */}
+      <section className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link
+            href="/promo/sale"
+            className="relative aspect-[2/1] rounded-xl overflow-hidden group"
           >
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src="https://images.unsplash.com/photo-1607083206325-caf1edba7a0f?w=600&h=300&fit=crop"
+              alt="Extra 10% OFF with Lorem Card"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/80 to-orange-400/60 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h3 className="font-fredoka text-3xl font-bold mb-2">SALE</h3>
+                <p className="font-noto text-sm mb-4">
+                  EXTRA 10% OFF PAY WITH LOREM CARD
+                </p>
+                <span className="inline-block font-fredoka bg-green-500 text-white px-6 py-2 rounded-lg">
+                  SHOP NOW
+                </span>
+              </div>
+            </div>
+          </Link>
+          <Link
+            href="/promo/accessories"
+            className="relative aspect-[2/1] rounded-xl overflow-hidden group"
           >
-            Documentation
-          </a>
+            <Image
+              src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=300&fit=crop"
+              alt="Shoes, Bags & Accessories 50% Sales Zone"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400/80 to-yellow-300/60 flex items-center justify-center">
+              <div className="text-center text-white">
+                <p className="font-noto text-sm mb-1">4 - 8 APR</p>
+                <h3 className="font-fredoka text-2xl font-bold mb-1">
+                  SHOES, BAGS &
+                </h3>
+                <h3 className="font-fredoka text-2xl font-bold mb-2">
+                  ACCESSORIES
+                </h3>
+                <span className="inline-block font-fredoka bg-pink-500 text-white px-4 py-1 rounded-lg text-sm">
+                  50% SALES ZONE
+                </span>
+              </div>
+            </div>
+          </Link>
         </div>
-      </main>
+      </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
