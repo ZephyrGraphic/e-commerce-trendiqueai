@@ -21,6 +21,8 @@ Proyek ini disusun dan dikembangkan oleh tim solid dengan pembagian peran sebaga
 
 ## 🏢 Identitas Perusahaan
 
+![Logo PT. AURESTLUMADE DIGITAL](/public/images/company-logo.jpg)
+
 ### **PT. AURESTLUMADE DIGITAL**
 *"Cahaya Emas untuk Dunia Digital"*
 
