@@ -9,12 +9,28 @@ import { formatPrice, type Product } from "@/lib/mockData";
 interface ProductCardProps {
   product: Product;
   className?: string;
+  onWishlistToggle?: (productId: string) => void;
 }
 
-export function ProductCard({ product, className }: ProductCardProps) {
+export function ProductCard({ product, className, onWishlistToggle }: ProductCardProps) {
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onWishlistToggle) {
+      onWishlistToggle(product.id);
+    } else {
+      // Default: call API to toggle wishlist
+      fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: product.id }),
+      });
+    }
+  };
+
   return (
     <Link
-      href={`/product/${product.id}`}
+      href={`/products/${product.id}`}
       className={cn(
         "group block bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow",
         className
@@ -39,10 +55,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         {/* Wishlist Button */}
         <button
           className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors"
-          onClick={(e) => {
-            e.preventDefault();
-            // Handle wishlist toggle
-          }}
+          onClick={handleWishlistClick}
         >
           <Heart
             className={cn(

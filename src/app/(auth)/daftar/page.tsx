@@ -13,7 +13,7 @@ export default function DaftarPage() {
     password: "",
   });
 
-  const { register, isLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,9 +28,9 @@ export default function DaftarPage() {
     await register(formData);
   };
 
-  const handleGoogleSignIn = () => {
-    console.log("Google sign in clicked");
-    // TODO: Implement Google OAuth
+  const handleGoogleSignIn = async () => {
+    console.log("🔵 Daftar Page: handleGoogleSignIn clicked");
+    await loginWithGoogle();
   };
 
   return (
@@ -102,7 +102,7 @@ export default function DaftarPage() {
         <button
           type="button"
           onClick={handleGoogleSignIn}
-          className="w-full h-14 lg:h-16 bg-secondary rounded-xl flex items-center justify-center gap-3 hover:bg-secondary/80 transition-colors focus:scale-[0.98] active:scale-95"
+          className="w-full h-14 lg:h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors focus:scale-[0.98] active:scale-95 relative z-20 cursor-pointer"
         >
           <Image
             src="/images/google-logo.svg"
@@ -111,7 +111,7 @@ export default function DaftarPage() {
             height={28}
             className="aspect-square object-contain"
           />
-          <span className="font-baloo text-muted-foreground text-xl">
+          <span className="font-baloo text-gray-700 text-xl">
             Google
           </span>
         </button>

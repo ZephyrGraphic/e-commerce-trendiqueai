@@ -74,7 +74,7 @@ Berikut adalah daftar kebutuhan fungsional sistem Trendique yang telah disepakat
 | 10 | Integrasi Produk dengan rekomendasi AI | **Must** | ✅ Implemented (Mock) |
 | 11 | Analisis Sentimen Review oleh AI | **Must** | 📝 Planned |
 | 12 | Pencarian Produk (Teks, Gambar, Suara) | **Must** | ⚠️ Partial (Text Verified) |
-| 13 | AI Menjawab pertanyaan & rekomendasi | **Must** | ✅ Implemented (Mock) |
+| 13 | AI Menjawab pertanyaan & rekomendasi | **Must** | ✅ Implemented (Gemini API) |
 | 14 | Kuis Interaktif & Reward oleh AI | **Must** | 📝 Planned |
 | 15 | Menampilkan Detail Produk | **Must** | ✅ Implemented |
 | 16 | Halaman Kategori Produk | **Must** | ✅ Implemented |
@@ -119,7 +119,12 @@ Project ini siap untuk dideploy ke [Vercel](https://vercel.com/new).
 
 1.  Push kode ke GitHub.
 2.  Import project di Vercel.
-3.  Klik **Deploy**.
+3.  **Tambahkan Environment Variables**:
+    *   `DATABASE_URL`: Connection string Supabase "Transaction" (Port 6543)
+    *   `DIRECT_URL`: Connection string Supabase "Session" (Port 5432)
+    *   `BETTER_AUTH_SECRET`: Generate random hash
+    *   `BETTER_AUTH_URL`: URL deploy Vercel (e.g. `https://trendique.vercel.app`)
+4.  Klik **Deploy**.
 
 ---
 &copy; 2024 - 2026 PT. AURESTLUMADE DIGITAL. All rights reserved.

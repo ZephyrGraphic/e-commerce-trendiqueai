@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading } = useAuth();
   const [email, setEmail] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -14,9 +14,9 @@ export default function LoginPage() {
     await login(email);
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Google login clicked");
-    // TODO: Implement Google OAuth
+  const handleGoogleLogin = async () => {
+    console.log("🔵 Login Page: handleGoogleLogin clicked");
+    await loginWithGoogle();
   };
 
   return (
@@ -89,7 +89,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleGoogleLogin}
-          className="w-full h-14 bg-secondary rounded-xl flex items-center justify-center gap-3 hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-[#4285f4]/50 transition-all active:scale-[0.98]"
+          className="w-full h-14 bg-white border border-gray-200 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#4285f4]/50 transition-all active:scale-[0.98] relative z-20 cursor-pointer"
           aria-label="Masuk dengan Google"
         >
           <Image
@@ -99,7 +99,7 @@ export default function LoginPage() {
             height={28}
             className="aspect-square object-contain"
           />
-          <span className="font-baloo text-muted-foreground text-xl">
+          <span className="font-baloo text-gray-700 text-xl">
             Google
           </span>
         </button>

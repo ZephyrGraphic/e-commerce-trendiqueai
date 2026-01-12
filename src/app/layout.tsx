@@ -39,6 +39,7 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning>
       <body
         className={`${fredoka.variable} ${notoSans.variable} ${baloo.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           {children}

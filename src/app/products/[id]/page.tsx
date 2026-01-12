@@ -1,52 +1,58 @@
-"use client";
-
-import { use, useState } from "react";
-import Image from "next/image";
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Star, Minus, Plus, Heart, Share2, ShoppingCart } from "lucide-react";
-import { popularProducts, bestSellingProducts, exploreProducts, formatPrice, Product } from "@/lib/mockData";
+import { Star } from "lucide-react";
+import { formatPrice } from "@/lib/mockData";
 import { ProductCard } from "@/components/ProductCard";
+import { getProductById, getProducts } from "@/app/actions/products";
+import { ProductActions } from "./ProductActions";
 
-// Combine all products for search
-const allProducts = [...popularProducts, ...bestSellingProducts, ...exploreProducts];
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const product = allProducts.find((p) => p.id === id);
-
-  const [quantity, setQuantity] = useState(1);
-
-  if (!product) {
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { id } = await params;
+  
+  // Fetch product from database
+  const productRes = await getProductById(id);
+  
+  if (!productRes.success || !productRes.data) {
     notFound();
   }
 
-  const handleDecrease = () => {
-    if (quantity > 1) setQuantity(quantity - 1);
-  };
+  const product = productRes.data;
 
-  const handleIncrease = () => {
-    setQuantity(quantity + 1);
-  };
-
-  // Mock related products (just take first 4 from explore or best selling that are not this product)
-  const relatedProducts = bestSellingProducts
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4);
+  // Fetch related products (same category or random)
+  const allProductsRes = await getProducts();
+  const relatedProducts = (allProductsRes.data || [])
+    .filter((p) => p.id !== product.id && p.categoryId === product.categoryId)
+    .slice(0, 4)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      originalPrice: p.originalPrice,
+      discount: p.discount ?? 0,
+      rating: p.rating ?? 0,
+      reviewCount: p.reviewCount ?? 0,
+      image: p.image,
+      isWishlisted: false,
+    }));
 
   return (
     <div className="bg-white min-h-screen">
       <Header />
 
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Breadcrumb (Simplified) */}
+        {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6 font-noto">
-          <span>Home</span>
+          <Link href="/" className="hover:text-primary">Home</Link>
           <span>/</span>
-          <span>Products</span>
+          <Link href="/products" className="hover:text-primary">Products</Link>
           <span>/</span>
           <span className="text-foreground font-medium">{product.name}</span>
         </div>
@@ -79,7 +85,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 {product.reviewCount} Reviews
               </span>
               <span className="text-muted-foreground">|</span>
-              <span className="text-green-600 font-medium font-noto">In Stock</span>
+              <span className={`font-medium font-noto ${(product.stock ?? 0) > 0 ? "text-green-600" : "text-red-600"}`}>
+                {(product.stock ?? 0) > 0 ? `In Stock (${product.stock ?? 0})` : "Out of Stock"}
+              </span>
             </div>
 
             <div className="flex items-center gap-4 mb-8">
@@ -99,47 +107,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </div>
 
             <p className="text-muted-foreground font-noto leading-relaxed mb-8">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+              {product.description || "Produk berkualitas tinggi dengan bahan premium. Cocok untuk penggunaan sehari-hari dan memberikan kenyamanan maksimal."}
             </p>
 
             <Separator className="mb-8" />
 
-            <div className="flex items-center gap-6 mb-8">
-              {/* Quantity */}
-              <div className="flex items-center border border-border rounded-lg">
-                <button
-                  onClick={handleDecrease}
-                  className="p-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-12 text-center font-bold font-noto">{quantity}</span>
-                <button
-                  onClick={handleIncrease}
-                  className="p-3 hover:bg-gray-50 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Actions */}
-              <div className="flex-1 flex gap-3">
-                <Button className="flex-1 h-12 text-base font-fredoka gap-2">
-                  <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
-                </Button>
-                <Button variant="outline" size="icon" className="h-12 w-12 shrink-0">
-                  <Heart className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-12 w-12 shrink-0">
-                  <Share2 className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
+            {/* Client Component for Actions */}
+            <ProductActions productId={product.id} stock={product.stock ?? 0} />
 
             {/* Additional Info */}
-            <div className="space-y-4">
+            <div className="space-y-4 mt-8">
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -155,23 +132,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Product Details Tabs (Description, Reviews) - Simplified as sections for now */}
+        {/* Product Details */}
         <div className="mb-16">
           <h3 className="font-fredoka text-2xl font-bold mb-6">Product Description</h3>
           <div className="prose max-w-none text-muted-foreground font-noto">
-             <p>Simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.</p>
+             <p>{product.description || "Produk berkualitas tinggi dengan bahan premium. Dibuat dengan standar kualitas terbaik untuk memberikan kepuasan maksimal kepada pelanggan. Cocok untuk berbagai keperluan dan dapat digunakan dalam jangka waktu yang lama."}</p>
           </div>
         </div>
 
         {/* Related Products */}
-         <div className="mb-8">
+        {relatedProducts.length > 0 && (
+          <div className="mb-8">
             <h3 className="font-fredoka text-2xl font-bold mb-6">You Might Also Like</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {relatedProducts.map(p => (
-                    <ProductCard key={p.id} product={p} />
-                ))}
+              {relatedProducts.map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
             </div>
-         </div>
+          </div>
+        )}
       </main>
 
       <Footer />

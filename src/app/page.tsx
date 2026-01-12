@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import Image from "next/image";
 import { HeroBanner } from "@/components/HeroBanner";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { SectionLabel } from "@/components/SectionLabel";
@@ -11,18 +10,57 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import {
   heroBanners,
-  popularProducts,
-  categories,
-  bestSellingProducts,
-  exploreProducts,
   promoBanners,
 } from "@/lib/mockData";
+import { getProducts, getCategories } from "@/app/actions/products";
 
-export default function Home() {
+// Re-map types locally if needed, or trust strict structural typing.
+// The components expect types from lib/mockData.
+// We will map DB data to match those interfaces.
+
+export default async function Home() {
   // Set countdown target to 3 days from now
   const countdownTarget = new Date();
   countdownTarget.setDate(countdownTarget.getDate() + 3);
   countdownTarget.setHours(23, 19, 56, 0);
+
+  // Fetch Data from DB
+  const [productsRes, categoriesRes] = await Promise.all([
+    getProducts(),
+    getCategories()
+  ]);
+
+  const dbProducts = productsRes.success ? productsRes.data || [] : [];
+  const dbCategories = categoriesRes.success ? categoriesRes.data || [] : [];
+
+  // Map DB Products to UI format
+  // We attach isWishlisted: false as a default
+  const allProducts = dbProducts.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    originalPrice: p.originalPrice,
+    discount: p.discount ?? 0,
+    rating: p.rating ?? 0,
+    reviewCount: p.reviewCount ?? 0,
+    image: p.image,
+    isWishlisted: false,
+    // Extra fields from DB will be ignored by the component
+  }));
+
+  // Map DB Categories to UI format
+  const displayCategories = dbCategories.map(c => ({
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    href: `/category/${c.slug}`
+  }));
+
+  // Distribute products (Simulated logic for now)
+  // In a real app, you might have specific queries for "Popular", "Best Selling"
+  const popularProducts = allProducts.slice(0, 8);
+  const bestSellingProducts = allProducts.length > 8 ? allProducts.slice(8, 16) : allProducts.slice(0, 8);
+  const exploreProducts = allProducts; // Show all or paginated
 
   return (
     <div className="bg-white min-h-screen w-full">
@@ -48,13 +86,17 @@ export default function Home() {
 
         {/* Products Horizontal Scroll */}
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {popularProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              className="min-w-[200px] max-w-[200px]"
-            />
-          ))}
+          {popularProducts.length > 0 ? (
+            popularProducts.map((product) => (
+                <ProductCard
+                key={product.id}
+                product={product}
+                className="min-w-[200px] max-w-[200px]"
+                />
+            ))
+          ) : (
+             <p className="text-gray-500">No products found. Add some from the Admin Panel.</p>
+          )}
         </div>
       </section>
 
@@ -74,9 +116,13 @@ export default function Home() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {categories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
+          {displayCategories.length > 0 ? (
+              displayCategories.map((category) => (
+                <CategoryCard key={category.id} category={category} />
+              ))
+          ) : (
+               <p className="text-gray-500 col-span-full">No categories found.</p>
+          )}
         </div>
       </section>
 

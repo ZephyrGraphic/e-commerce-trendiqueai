@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Send, X } from "lucide-react";
+import { Send, X, Loader2 } from "lucide-react";
+import { FormattedTime } from "@/components/FormattedTime";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
 
 type Message = {
   id: string;
@@ -50,10 +52,11 @@ export function ChatInterface({ isMobile = false, onClose, className }: ChatInte
     e.preventDefault();
     if (!inputText.trim()) return;
 
+    const userMsgContent = inputText;
     const newUserMsg: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: inputText,
+      content: userMsgContent,
       timestamp: new Date(),
     };
 
@@ -61,26 +64,35 @@ export function ChatInterface({ isMobile = false, onClose, className }: ChatInte
     setInputText("");
     setIsTyping(true);
 
-    // Simulate AI thinking and typing
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "ai",
-        content: generateMockResponse(inputText),
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 2000);
-  };
+    try {
+        const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: userMsgContent }),
+        });
 
-  const generateMockResponse = (text: string): string => {
-    const lower = text.toLowerCase();
-    if (lower.includes("halo") || lower.includes("hai")) return "Halo juga! Cari style apa hari ini? Casual, formal, atau party? 💃";
-    if (lower.includes("rekomendasi") || lower.includes("saran")) return "Boleh banget! Aku saranin cek koleksi 'New Arrival' kita. Ada dress bunga-bunga yang lagi hits banget lho! 🌸";
-    if (lower.includes("harga") || lower.includes("diskon")) return "Tenang, lagi banyak promo menarik! Cek bagian notifikasi ya untuk kode vouchernya 🏷️";
-    if (lower.includes("makasih") || lower.includes("terima kasih")) return "Sama-sama! Happy shopping ya! Jangan lupa checkout sebelum kehabisan 😉";
-    return "Hmm, menarik. Coba jelasin lebih detail lagi dong biar aku bisa pilihin yang paling pas buat kamu! 🤔";
+        const data = await res.json();
+        
+        const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "ai",
+            content: data.content || "Maaf, aku lagi bingung nih. Coba lagi ya!",
+            timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+        console.error("Failed to send message", error);
+        const errorResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "ai",
+            content: "Oops, ada gangguan jaringan. Cek koneksi kamu ya! 📶",
+            timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorResponse]);
+    } finally {
+        setIsTyping(false);
+    }
   };
 
   return (
@@ -124,7 +136,7 @@ export function ChatInterface({ isMobile = false, onClose, className }: ChatInte
                  <Image src="/images/mascot.png" alt="Query" width={32} height={32} className="w-full h-full object-cover" />
               ) : (
                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={user?.avatar} />
+                    <AvatarImage src={user?.image || undefined} />
                     <AvatarFallback>U</AvatarFallback>
                  </Avatar>
               )}
@@ -132,15 +144,25 @@ export function ChatInterface({ isMobile = false, onClose, className }: ChatInte
 
             {/* Bubble */}
             <div
-              className={`max-w-[75%] p-3 rounded-2xl text-sm font-noto shadow-sm ${
+              className={`max-w-[85%] p-3 rounded-2xl text-sm font-noto shadow-sm ${
                 msg.role === "user"
                   ? "bg-primary text-white rounded-br-none"
-                  : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
+                  : "bg-white text-gray-800 border border-gray-200 rounded-bl-none prose prose-sm max-w-none"
               }`}
             >
-              {msg.content}
-              <div className={`text-[10px] mt-1 opacity-70 ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {msg.role === "ai" ? (
+                <ReactMarkdown 
+                    components={{
+                        a: ({node, ...props}) => <a {...props} className="text-blue-600 underline font-bold hover:text-blue-800" target="_blank" />
+                    }}
+                >
+                    {msg.content}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
+              <div className={`text-[10px] mt-1 opacity-70 ${msg.role === "user" ? "text-right text-white/80" : "text-left text-gray-400"}`}>
+                <FormattedTime timestamp={msg.timestamp} />
               </div>
             </div>
           </div>
@@ -173,7 +195,7 @@ export function ChatInterface({ isMobile = false, onClose, className }: ChatInte
             className="flex-1 rounded-full bg-gray-50 border-gray-200 focus-visible:ring-primary"
           />
           <Button type="submit" size="icon" className="rounded-full w-10 h-10 shrink-0" disabled={!inputText.trim() || isTyping}>
-            <Send className="w-4 h-4" />
+            {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </form>
       </div>

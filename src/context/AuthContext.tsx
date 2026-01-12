@@ -2,91 +2,94 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { signIn, signUp, signOut, useSession } from "@/lib/auth-client";
+import { User as BetterAuthUser } from "better-auth";
 
 interface User {
   id: string;
-  name: string;
   email: string;
-  avatar?: string;
+  emailVerified: boolean;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  image?: string | null;
   phone?: string;
+  onboardingCompleted?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
-  register: (data: { username: string; email: string; phone: string }) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  register: (data: { username: string; email: string; phone: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, isPending: isLoading } = useSession();
   const router = useRouter();
 
-  useEffect(() => {
-    // Check local storage on mount
-    const storedUser = localStorage.getItem("trendique_user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        localStorage.removeItem("trendique_user");
+  const user: User | null = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+        emailVerified: session.user.emailVerified,
+        image: session.user.image ?? undefined,
+        createdAt: session.user.createdAt,
+        updatedAt: session.user.updatedAt,
+        phone: (session.user as any).phone,
+        onboardingCompleted: (session.user as any).onboardingCompleted ?? false,
       }
+    : null;
+
+  useEffect(() => {
+    if (!isLoading && user && !user.onboardingCompleted && window.location.pathname !== "/onboarding") {
+      router.push("/onboarding");
     }
-    setIsLoading(false);
-  }, []);
+  }, [user, isLoading, router]);
 
-  const login = async (email: string) => {
-    setIsLoading(true);
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const mockUser: User = {
-      id: "1",
-      name: email.split("@")[0], // Simple username from email
-      email: email,
-      avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=${email}`,
-      phone: "+62 812-3456-7890",
-    };
-
-    setUser(mockUser);
-    localStorage.setItem("trendique_user", JSON.stringify(mockUser));
-    setIsLoading(false);
-    
-    // Redirect handled by component or here? sticking to redirect in component for flexibility usually, but standardized here is fine too. 
-    // Let's keep redirect basic here for "easy" integration
-    router.push("/"); 
-  };
-
-  const register = async (data: { username: string; email: string; phone: string }) => {
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const mockUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: data.username,
-      email: data.email,
-      phone: data.phone,
-      avatar: `https://api.dicebear.com/9.x/avataaars/svg?seed=${data.username}`,
-    };
-
-    setUser(mockUser);
-    localStorage.setItem("trendique_user", JSON.stringify(mockUser));
-    setIsLoading(false);
+  const login = async (email: string, password?: string) => {
+    if (password) {
+      await signIn.email({ email, password });
+    } else {
+      // For backward compatibility - using magic link or fallback
+      await signIn.email({ email, password: "temp-password" });
+    }
     router.push("/");
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("trendique_user");
-    router.push("/login");
+  const loginWithGoogle = async () => {
+    console.log("🔵 AuthContext: loginWithGoogle called");
+    try {
+      await signIn.social({ provider: "google", callbackURL: "/" });
+      console.log("🟢 AuthContext: signIn.social called successfully");
+    } catch (error) {
+      console.error("🔴 AuthContext: Error in loginWithGoogle:", error);
+    }
+  };
+
+  const register = async (data: { username: string; email: string; phone: string; password: string }) => {
+    await signUp.email({
+      email: data.email,
+      password: data.password,
+      name: data.username,
+    });
+    router.push("/");
+  };
+
+  const logout = async () => {
+    await signOut();
+    router.push("/");
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginWithGoogle, register, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
