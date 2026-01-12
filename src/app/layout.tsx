@@ -27,6 +27,7 @@ const baloo = Baloo_2({
 export const metadata: Metadata = {
   title: "Trendique - Belanja Fashion Tanpa Drama",
   description: "Mau Belanja Tanpa Drama? Gaskeun ke Trendique! Sekali klik, langsung happy.",
+  metadataBase: new URL("https://trendique-ai.vercel.app"),
 };
 
 export default function RootLayout({
